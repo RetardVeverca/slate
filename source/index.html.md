@@ -1,15 +1,11 @@
 ---
-title: API Reference
+title: Eventum API Reference
 
 language_tabs: # must be one of https://git.io/vQNgJ
-  - shell
-  - ruby
-  - python
-  - javascript
+  - shell: cURL
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
-  - <a href='https://github.com/tripit/slate'>Documentation Powered by Slate</a>
+  - <a href="mailto:martin.m@thekiwifactory.com">Contact admin</a>
 
 includes:
   - errors
@@ -19,221 +15,262 @@ search: true
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Welcome to the Eventum API!
 
-We have language bindings in Shell, Ruby, and Python! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+Use this API to authenticate users, log them in, get their account details, show demo event information, retrieve information about consensus results etc.
 
-This example API documentation page was created with [Slate](https://github.com/tripit/slate). Feel free to edit it and use it as a base for your own API's documentation.
+## Design and authentication
 
-# Authentication
-
-> To authorize, use this code:
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-```
+> Sample request with the authentication token:
 
 ```shell
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
+curl "https://api.eventum.network/events"
+  -H "Authorization: Bearer drevutEbr*qA=_#ruYasp+bruva3!aBr"
+  -X "GET"
 ```
 
-```javascript
-const kittn = require('kittn');
+All responses return JSON object in the body, successful responses return `data` object and error responses return `error` object. Both objects contain message (error message), id (message id) and code (HTTP code). HTTP codes are always returned according to the RFC 2616 (see <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">this</a>). All 400 error codes mean the request was malformed and you should not repeat the request without modifications first. All 500 errors mean that something went wrong on the server side, so users can receive general "Something went wrong, please try again later" or similar warning. If detected please contact admin <a href="mailto:martin.m@thekiwifactory.com">here</a>.
 
-let api = kittn.authorize('meowmeowmeow');
-```
+All endpoints except `/signup`, `/login`, `/confirm_email` and `/password_reset` requires authentication token - `auth_token` to be presented in the header (Authorization: Bearer ...). `auth_token` has an expiration time and if expired, client needs to logout the user and acquire new token via the login process. On client side, authentication token can be stored without cookies (e.g. sessionStorage), but there must be no XSS vulnerabilities presented.
 
-> Make sure to replace `meowmeowmeow` with your API key.
+Default rate limiting on all endpoints is: 30/minute and 200/hour per IP address. This is overwritten by specific values mentioned for each endpoint.
 
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
-
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
-
-`Authorization: meowmeowmeow`
+All times are defined in UNIX timestamp (UNIX epoch time measured in seconds since Jan 01 1970 (UTC))
 
 <aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
+Watch for XSS vulnerabilities when storing authorization token into sessionStorage
 </aside>
 
-# Kittens
+# Users
 
-## Get All Kittens
+## Signup
 
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
+> Sample request:
 
 ```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
+curl "https://api.eventum.network/users"
+  -X "POST"
+  -d '{
+        "data": {
+        "email": "janez@gmail.com",
+        "password": "super_secret_password",
+        "confirmation_url": "https://alpha.eventum.network/confirm?otk="
+        }
+      }'
 ```
 
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
-
-> The above command returns JSON structured like this:
+> Sample success response:
 
 ```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
-  }
-]
+{
+    "data": {
+        "message": "User added and email was sent",
+        "code": 201,
+        "id": "user_inserted"
+    }
+}
 ```
 
-This endpoint retrieves all kittens.
+> Sample error response:
+
+```json
+{
+    "error": {
+        "message": "Duplicate entry 'mikelnmartin@yahoo.com' for key 'email'",
+        "code": 400,
+        "id": "duplicate"
+    }
+}
+```
+
+Signup new user to the demo app.
+
+Rate limiting on this endpoint is 10/minute.
 
 ### HTTP Request
 
-`GET http://example.com/api/kittens`
+`POST https://api.eventum.network/users`
 
 ### Query Parameters
 
-Parameter | Default | Description
---------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
+Query parameters must be send in a JSON format inside `data` object!
 
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
-</aside>
+Parameter | Default | Format | Description
+--------- | ------- | ------ | -----------
+email | NULL | string(max=190), UNIQUE | Email which will be used for all communications and the whitelist
+password | NULL | string | Password
+confirmation_url | NULL | string | URL to which otk value is appended and send to the user to confirm his email
 
-## Get a Specific Kitten
+### Success response
 
-```ruby
-require 'kittn'
+User is added to the database, otk (one-time-token) is generated and user receives email with the confirmation link where otk is appended
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
-```
+code | id | message
+---- | -- | -------
+201 | user_inserted | User added and email was sent
 
-```python
-import kittn
+### Error response
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
+400 errors could be returned because `email` field is already used or JSON format is incorrect
+
+code | id | message
+---- | -- | -------
+400 | duplicate | Duplicate entry '`email`' for key 'email'
+400 | json_error | [varies, but usually the structure is wrong or there is a missing field]
+500 | email_error | Email couldn't be send to the user. User deleted from DB.
+500 | otk_error | [varies, but otk was not created and there is a DB error info here]
+500 | db_error | [varies]
+
+## Email verification
+
+> Sample request:
 
 ```shell
-curl "http://example.com/api/kittens/2"
-  -H "Authorization: meowmeowmeow"
+curl "https://api.eventum.network/confirm_otk"
+  -X "POST"
+  -d '{
+        "data": {
+        "otk": "bJMc90E7HvdXFqml8mSkoT6s0rBhM6upCXFr76jbki"
+        }
+      }'
 ```
 
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
-```
-
-> The above command returns JSON structured like this:
+> Sample success response:
 
 ```json
 {
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
+    "data": {
+        "message": "Email verified, auth_token returned",
+        "code": 200,
+        "id": "email_verified",
+        "auth_token": "vJoXFg48bsRbHOuNkQ5WtrafIgJ2GeKN3Fo9jIugnC",
+        "user_id": "42"
+    }
 }
 ```
 
-This endpoint retrieves a specific kitten.
-
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
-
-### HTTP Request
-
-`GET http://example.com/kittens/<ID>`
-
-### URL Parameters
-
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to retrieve
-
-## Delete a Specific Kitten
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2"
-  -X DELETE
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.delete(2);
-```
-
-> The above command returns JSON structured like this:
+> Sample error response:
 
 ```json
 {
-  "id": 2,
-  "deleted" : ":("
+    "error": {
+        "message": "One time token could not be found",
+        "code": 500,
+        "id": "otk_error"
+    }
 }
 ```
 
-This endpoint retrieves a specific kitten.
+Confirm email address with one time token
 
 ### HTTP Request
 
-`DELETE http://example.com/kittens/<ID>`
+`POST https://api.eventum.network/confirm_otk`
 
-### URL Parameters
+### Query Parameters
 
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to delete
+Query parameters must be send in a JSON format inside `data` object!
 
+Parameter | Default | Format | Description
+--------- | ------- | ------ | -----------
+otk | NULL | string(fixed=42) | One time token user receives in the email link
+
+### Success response
+
+One time token is validated, expiration date is checked, email becomes verified (user can now login via the /login) and auth_token is returned (which
+  is used for other endpoints that need verification)
+
+code | id | message | auth_token | user_id
+---- | -- | ------- | ---------- | -------
+201 | email_verified | Email verified, auth_token returned | Auth token for further authentication | User's ID used for other operations, such as /users/{id}
+
+### Error response
+
+400 errors could be returned because otk is expired or JSON format is incorrect
+
+code | id | message
+---- | -- | -------
+400 | otk_expired | One time token is expired
+400 | json_error | [varies, but usually the structure is wrong or there is a missing field]
+500 | auth_error | Error confirming the email and generating auth_token
+500 | otk_not_found_error | One time token could not be found
+
+
+## Login
+
+> Sample request:
+
+```shell
+curl "https://api.eventum.network/login"
+  -X "POST"
+  -d '{
+        "data": {
+        "email": "janez@gmail.com",
+        "password": "super_secret_password"
+        }
+      }'
+```
+
+> Sample success response:
+
+```json
+{
+    "data": {
+        "code": 200,
+        "user_id": 42,
+        "auth_token": "3PBTqxXE4RPDJtRIh9tJMrZmNGUKQNN6YLMvJgjZen",
+        "message": "User successfuly logged in",
+        "user_surname": null,
+        "user_name": null,
+        "id": "user_logged_in"
+    }
+}
+```
+
+> Sample error response:
+
+```json
+{
+    "error": {
+        "message": "Password is incorrect",
+        "code": 400,
+        "id": "wrong_password"
+    }
+}
+```
+
+Login user. Email needs to be verified before calling this endpoint.
+
+### HTTP Request
+
+`POST https://api.eventum.network/login`
+
+### Query Parameters
+
+Query parameters must be send in a JSON format inside `data` object!
+
+Parameter | Default | Format | Description
+--------- | ------- | ------ | -----------
+email | NULL | string(max=190), UNIQUE | Email
+password | NULL | string | Password
+
+### Success response
+
+Successful response returns auth_token, if this
+token already exists (because of the signup process), then the existing auth_token is returned.
+
+code | id | message | auth_token | user_id | user_name | user_surname
+---- | -- | ------- | ---------- | ------- | --------- | ------------
+201 | user_logged_in | User successfuly logged in | Auth token for further authentication | User's ID used for other operations, such as /users/{id} | Name | Surname
+
+### Error response
+
+400 errors could be returned because email is unverified, user does not exist, password is wrong or JSON format is incorrect
+
+code | id | message
+---- | -- | -------
+400 | email_unverified | Email is not verified
+400 | user_not_found | User with this email does not exist
+400 | wrong_password | Password is incorrect
+500 | auth_error | auth_token could not be generated
+500 | db_error | [varies]
