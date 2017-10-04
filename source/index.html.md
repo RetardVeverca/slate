@@ -31,7 +31,7 @@ curl "https://api.eventum.network/events"
 
 All responses return JSON object in the body, successful responses return `data` object and error responses return `error` object. Both objects contain message (error message), id (message id) and code (HTTP code). HTTP codes are always returned according to the RFC 2616 (see <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html">this</a>). All 400 error codes mean the request was malformed and you should not repeat the request without modifications first. All 500 errors mean that something went wrong on the server side, so users can receive general "Something went wrong, please try again later" or similar warning. If detected please contact admin <a href="mailto:martin.m@thekiwifactory.com">here</a>.
 
-All endpoints except `/signup`, `/login`, `/confirm_email` and `/password_reset` requires authentication token - `auth_token` to be presented in the header (Authorization: Bearer ...). `auth_token` has an expiration time and if expired, client needs to logout the user and acquire new token via the login process. On client side, authentication token can be stored without cookies (e.g. sessionStorage), but there must be no XSS vulnerabilities presented.
+All endpoints except `/signup`, `/login`, `/confirm_otk` and `/password_reset` requires authentication token - `auth_token` to be presented in the header (Authorization: Bearer ...). `auth_token` has an expiration time and if expired, client needs to logout the user and acquire new token via the login process. On client side, authentication token can be stored without cookies (e.g. sessionStorage), but there must be no XSS vulnerabilities presented.
 
 Default rate limiting on all endpoints is: 30/minute and 200/hour per IP address. This is overwritten by specific values mentioned for each endpoint.
 
@@ -118,8 +118,7 @@ code | id | message
 400 | duplicate | Duplicate entry '`email`' for key 'email'
 400 | json_error | [varies, but usually the structure is wrong or there is a missing field]
 500 | email_error | Email couldn't be send to the user. User deleted from DB.
-500 | otk_error | [varies, but otk was not created and there is a DB error info here]
-500 | db_error | [varies]
+500 | db_error | Unknown DB error
 
 ## Email verification
 
@@ -241,6 +240,8 @@ curl "https://api.eventum.network/login"
 
 Login user. Email needs to be verified before calling this endpoint.
 
+Rate limiting on this endpoint is 10/minute.
+
 ### HTTP Request
 
 `POST https://api.eventum.network/login`
@@ -270,7 +271,163 @@ code | id | message | auth_token | user_id | user_name | user_surname
 code | id | message
 ---- | -- | -------
 400 | email_unverified | Email is not verified
-400 | user_not_found | User with this email does not exist
-400 | wrong_password | Password is incorrect
+400 | wrong_credentials | Wrong login credentials
 500 | auth_error | auth_token could not be generated
-500 | db_error | [varies]
+500 | db_error | Unknown DB error
+
+
+
+
+## Update user information
+
+> Sample request:
+
+```shell
+curl "https://api.eventum.network/users/{user_id}"
+  -X "PUT"
+  -d '{
+        "data": {
+          "name": "Martin",
+          "surname": "Mikeln",
+          "password": "",
+          "eth_address": "0xOP403834046d64AAc2F98BA9CD29A84D48DBFIOD"
+        }
+      }'
+```
+
+> Sample success response:
+
+```json
+{
+  "data": {
+      "message": "User's information was updated'",
+      "code": 200,
+      "id": "user_updated"
+  }
+}
+```
+
+> Sample error response:
+
+```json
+{
+  "error": {
+      "message": "Could not find name field in the JSON",
+      "code": 400,
+      "id": "json_error"
+  }
+}
+```
+
+Update user's information. <br />
+All fields must be included. If the value is an empty string the field is not updated on the backend. <br />
+The update is atomic in nature - it can succeed entirely or it can fail entirely, but it cannot partly succeed.
+
+The following fields can be updated: `name`, `surname`, `password` and `eth_address`
+
+This endpoint requires authentication!
+
+### HTTP Request
+
+`PUT https://api.eventum.network/users/{user_id}`
+
+### Query Parameters
+
+Query parameters must be send in a JSON format inside `data` object!
+
+Parameter | Default | Format | Description
+--------- | ------- | ------ | -----------
+name | previous value | string(max=255) | First name
+surname | previous value | string(max=255) | Last name
+password | previous value | string | Password
+eth_address | previous value | string(fixed=42) | Last name
+
+### Success response
+
+code | id | message
+---- | -- | -------
+200 | user_updated | User's information was updated
+
+### Error response
+
+400 errors could be returned because JSON format is incorrect
+
+code | id | message
+---- | -- | -------
+400 | auth_expired | Authorization token is expired
+400 | auth_invalid | Authorization token is not valid for this user
+400 | auth_not_found | Auth_token was not found
+400 | json_error | [varies, but usually the structure is wrong or there is a missing field]
+500 | db_error | Unknown DB error
+
+
+## Get user information
+
+> Sample request:
+
+```shell
+curl "https://api.eventum.network/users/{user_id}"
+  -X "GET"
+  -H "Authorization: Bearer drevuty9r*qA=_#ruYasp+bruva3yiP"
+```
+
+> Sample success response:
+
+```json
+{
+  "data": {
+      "code": 200,
+      "id": "user_info",
+      "message": "User's info successfuly retrieved",
+      "user_id": 120,
+      "user_name": "Janez",
+      "user_surname": "Novak",
+      "user_email": "mikelnmartin@yahoo.comm",
+      "user_eth_address": "0xOP403834046d64AAc2F98BA9CD29A84D48DBFIOD",
+      "user_signup_timestamp": 1507041664,
+      "user_email_verified": 1,
+      "user_reputation": 0
+  }
+}
+```
+
+> Sample error response:
+
+```json
+{
+  "error": {
+      "message": "Auth_token was not found",
+      "code": 400,
+      "id": "auth_not_found"
+  }
+}
+```
+
+Get user's information including events he joined and his voting results. <br />
+
+This endpoint requires authentication!
+
+### HTTP Request
+
+`GET https://api.eventum.network/users/{user_id}`
+
+### Query Parameters
+
+There are no query parameters (do NOT send Content-Type headers to a GET request!)
+
+### Success response
+
+code | id | message
+---- | -- | -------
+200 | user_info | User's info successfuly retrieved
+
+### Error response
+
+400 errors could be returned because JSON format is incorrect
+
+code | id | message
+---- | -- | -------
+400 | auth_expired | Authorization token is expired
+400 | auth_invalid | Authorization token is not valid for this user
+400 | auth_not_found | Auth_token was not found
+500 | db_error | Unknown DB error
