@@ -386,7 +386,19 @@ curl "https://api.eventum.network/users/{user_id}"
       "user_eth_address": "0xOP403834046d64AAc2F98BA9CD29A84D48DBFIOD",
       "user_signup_timestamp": 1507041664,
       "user_email_verified": 1,
-      "user_reputation": 0
+      "user_reputation": 0,
+      "events": [
+          {
+              "event_id": 1,
+              "user_reward": 0,
+              "user_joined": true,
+              "user_voted": true,
+              "answers": [
+                  1,
+                  4
+              ]
+          }
+      ]
   }
 }
 ```
@@ -430,4 +442,157 @@ code | id | message
 400 | auth_expired | Authorization token is expired
 400 | auth_invalid | Authorization token is not valid for this user
 400 | auth_not_found | Auth_token was not found
+500 | db_error | Unknown DB error
+
+# Events
+
+## Join
+
+> Sample request:
+
+```shell
+curl "https://api.eventum.network/join"
+  -X "POST"
+  -d '{
+        "data": {
+          "user_id": 45,
+          "event_id": 1
+        }
+      }'
+```
+
+> Sample success response:
+
+```json
+{
+    "data": {
+        "message": "User joined the event",
+        "code": 201,
+        "id": "user_joined"
+    }
+}
+```
+
+> Sample error response:
+
+```json
+{
+    "error": {
+        "message": "Event is full",
+        "code": 400,
+        "id": "event_full_error"
+    }
+}
+```
+
+Join a user to an event to give him/her voting rights
+
+### HTTP Request
+
+`POST https://api.eventum.network/join`
+
+### Query Parameters
+
+Query parameters must be send in a JSON format inside `data` object!
+
+Parameter | Default | Format | Description
+--------- | ------- | ------ | -----------
+user_id | NULL | int | user's ID
+event_id | NULL | int | event's ID
+
+### Success response
+
+User is "joined" to the event, added to the database table "event_users"
+
+code | id | message
+---- | -- | -------
+201 | user_joined | User joined the event
+
+### Error response
+
+400 errors could be returned because JSON format is incorrect
+
+code | id | message
+---- | -- | -------
+400 | event_full_error | Event is full
+400 | ttj_error | Time to join has passed
+400 | joined_error | User already joined
+500 | db_error | Unknown DB error
+
+
+## Vote
+
+> Sample request:
+
+```shell
+curl "https://api.eventum.network/vote"
+  -X "POST"
+  -d '{
+        "data": {
+          "user_id": 45,
+          "event_id": 1,
+          "answer_ids": [1,4]
+        }
+      }'
+```
+
+> Sample success response:
+
+```json
+{
+    "data": {
+        "message": "Vote cast, consensus not yet reached",
+        "code": 201,
+        "id": "vote_cast"
+    }
+}
+```
+
+> Sample error response:
+
+```json
+{
+    "error": {
+        "message": "Event already ended",
+        "code": 400,
+        "id": "event_end_error"
+    }
+}
+```
+
+Vote on an event
+
+### HTTP Request
+
+`POST https://api.eventum.network/vote`
+
+### Query Parameters
+
+Query parameters must be send in a JSON format inside `data` object!
+
+Parameter | Default | Format | Description
+--------- | ------- | ------ | -----------
+user_id | NULL | int | user's ID
+event_id | NULL | int | event's ID
+answer_ids | NULL | array | list of answer IDs
+
+### Success response
+
+User "voted" on the event, votes added to the database table "votes"
+
+code | id | message
+---- | -- | -------
+201 | vote_cast | Vote cast, consensus not yet reached/consensus reached/consensus reached beforehand
+
+### Error response
+
+400 errors could be returned because JSON format is incorrect
+
+code | id | message
+---- | -- | -------
+400 | not_joined_error | User is not joined on this event
+400 | event_start_error | Event not started
+400 | event_end_error | Event already ended
+400 | already_voted_error | User already voted on this event
+500 | event_error | Unknown event parameters error
 500 | db_error | Unknown DB error
