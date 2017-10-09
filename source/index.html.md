@@ -446,6 +446,80 @@ code | id | message
 
 # Events
 
+## Get events information
+
+> Sample request:
+
+```shell
+curl "https://api.eventum.network/events"
+  -X "GET"
+```
+
+> Sample success response:
+
+```json
+{
+    "data": {
+        "code": 200,
+        "events": [
+            {
+                "time_to_join": 1507124398,
+                "description": "Second event description",
+                "event_id": 2,
+                "start_time": 1507549357,
+                "question": "Second event question",
+                "answers": [
+                    [
+                        "Simple answer 1",
+                        "Simple answer 2"
+                    ]
+                ],
+                "end_flag": 1,
+                "end_time": 1509549357,
+                "questions": [
+                    "Simple question"
+                ],
+                "reward": 10
+            }
+        ]
+    }
+}
+```
+
+> Sample error response:
+
+```json
+{
+    "error": {
+        "message": "Unknown DB error",
+        "code": 500,
+        "id": "db_error"
+    }
+}
+```
+
+Get a list of all events and their information
+
+### HTTP Request
+
+`GET https://api.eventum.network/events`
+
+
+### Success response
+
+code | id | message
+---- | -- | -------
+201 | events_info | Events info successfuly retrieved
+
+### Error response
+
+400 errors could be returned because JSON format is incorrect
+
+code | id | message
+---- | -- | -------
+500 | db_error | Unknown DB error
+
+
 ## Join
 
 > Sample request:
