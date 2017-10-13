@@ -470,11 +470,17 @@ curl "https://api.eventum.network/events"
                 "title": "Test event #1",
                 "event_id": 1,
                 "fields": [
-                    "Question first part",
-                    "Question second part"
+                    {
+                        "field_id": 4,
+                        "label": "Question first part"
+                    },
+                    {
+                        "field_id": 5,
+                        "label": "Question second part"
+                    }
                 ],
                 "start_time": 1507549357,
-                "end_flag": 1,
+                "state": 2,
                 "end_time": 1509549357,
                 "contract_address": "123abc",
                 "reward": 5,
@@ -534,12 +540,6 @@ curl "https://api.eventum.network/events"
     }
 }
 ```
-
-Get a list of all events and their information
-
-"questions" is an array that represents all "subquestions" for an event (e.g. WHO scored a goal, WHEN did he score the goal).
-"answers" is structured in the same way. Each question in "questions" has its possible answers listed in an array on the corresponding index
-(Question "questions[3]" has its possible answers listed on answers[3])
 
 ### HTTP Request
 
