@@ -460,26 +460,63 @@ curl "https://api.eventum.network/events"
 ```json
 {
     "data": {
+        "message": "Events info successfuly retrieved",
         "code": 200,
+        "id": "events_info",
         "events": [
             {
                 "time_to_join": 1507124398,
-                "description": "Second event description",
-                "event_id": 2,
-                "start_time": 1507549357,
-                "question": "Second event question",
-                "answers": [
-                    [
-                        "Simple answer 1",
-                        "Simple answer 2"
-                    ]
+                "description": "This is a description",
+                "title": "Test event #1",
+                "event_id": 1,
+                "fields": [
+                    "Question first part",
+                    "Question second part"
                 ],
+                "start_time": 1507549357,
                 "end_flag": 1,
                 "end_time": 1509549357,
-                "questions": [
-                    "Simple question"
+                "contract_address": "123abc",
+                "reward": 5,
+                "input_methods": [
+                    {
+                        "values": [
+                            {
+                                "first_label": "first_value"
+                            },
+                            {
+                                "second_label": "second_value"
+                            },
+                            {
+                                "third_label": "third_value"
+                            }
+                        ],
+                        "field_id": 4,
+                        "validation": [
+                            "required"
+                        ],
+                        "type": "dropdown"
+                    },
+                    {
+                        "values": [
+                            {
+                                "first_label": "first_value"
+                            },
+                            {
+                                "second_label": "second_value"
+                            },
+                            {
+                                "third_label": "third_value"
+                            }
+                        ],
+                        "field_id": 5,
+                        "validation": [
+                            "required"
+                        ],
+                        "type": "dropdown"
+                    }
                 ],
-                "reward": 10
+                "subject": "This is a question"
             }
         ]
     }
@@ -499,6 +536,10 @@ curl "https://api.eventum.network/events"
 ```
 
 Get a list of all events and their information
+
+"questions" is an array that represents all "subquestions" for an event (e.g. WHO scored a goal, WHEN did he score the goal).
+"answers" is structured in the same way. Each question in "questions" has its possible answers listed in an array on the corresponding index
+(Question "questions[3]" has its possible answers listed on answers[3])
 
 ### HTTP Request
 
@@ -593,7 +634,6 @@ code | id | message
 400 | joined_error | User already joined
 500 | db_error | Unknown DB error
 
-
 ## Vote
 
 > Sample request:
@@ -605,7 +645,7 @@ curl "https://api.eventum.network/vote"
         "data": {
           "user_id": 45,
           "event_id": 1,
-          "answer_ids": [1,4]
+          "answers": [{"field_id": 4, "field_value": "first_value"}, {"field_id": 5, "field_value": "first_value"}]
         }
       }'
 ```
@@ -648,7 +688,7 @@ Parameter | Default | Format | Description
 --------- | ------- | ------ | -----------
 user_id | NULL | int | user's ID
 event_id | NULL | int | event's ID
-answer_ids | NULL | array | list of answer IDs
+answers | NULL | array | list answers
 
 ### Success response
 
