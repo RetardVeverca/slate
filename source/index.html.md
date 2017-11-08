@@ -54,7 +54,8 @@ curl "https://api.eventum.network/users"
         "data": {
         "email": "janez@gmail.com",
         "password": "super_secret_password",
-        "confirmation_url": "https://alpha.eventum.network/confirm?otk="
+        "confirmation_url": "https://alpha.eventum.network/confirm?otk=",
+        "ref": "8hv1p2hc1p2v"
         }
       }'
 ```
@@ -100,6 +101,7 @@ Parameter | Default | Format | Description
 email | NULL | string(max=190), UNIQUE | Email which will be used for all communications and the whitelist
 password | NULL | string | Password
 confirmation_url | NULL | string | URL to which otk value is appended and send to the user to confirm his email
+ref | NULL, OPTIONAL | string | Referral parameter
 
 ### Success response
 
