@@ -391,15 +391,32 @@ curl "https://api.eventum.network/users/{user_id}"
       "user_reputation": 0,
       "events": [
           {
-              "event_id": 1,
-              "user_reward": 0,
-              "user_joined": true,
               "user_voted": true,
+              "event_id": 1,
+              "reward_claimed": 1,
               "answers": [
-                  1,
-                  4
-              ]
-          }
+                  {
+                      "field_value": "first_value",
+                      "field_id": 4
+                  },
+                  {
+                      "field_value": "first_value",
+                      "field_id": 5
+                  }
+              ],
+              "user_reward_ETH": "523809523809523840",
+              "user_reward_EVT": 52,
+              "vote_timestamp": 1510672356,
+              "vote_position": 3,
+              "user_joined": true
+          },
+          {
+                "event_id": 2,
+                "user_reward": 0,
+                "user_joined": false,
+                "user_voted": false,
+                "answers": []
+            }
       ]
   }
 }
@@ -450,10 +467,28 @@ code | id | message
 
 ## Get events information
 
+To get statistics for the events use "statistics" in "include" (https://api.eventum.network/events?include=statistics)
+Statistics will only be included on the events that have already ended and have reached consensus
+
+States go as follows:
+<br>
+-1: upcoming
+<br>
+0: joinable
+<br>
+1: pending
+<br>
+2: live
+<br>
+3: done
+<br>
+4: claimable
+
+
 > Sample request:
 
 ```shell
-curl "https://api.eventum.network/events"
+curl "https://api.eventum.network/events?include=statistics"
   -X "GET"
 ```
 
@@ -467,64 +502,82 @@ curl "https://api.eventum.network/events"
         "id": "events_info",
         "events": [
             {
-                "time_to_join": 1507124398,
-                "description": "This is a description",
-                "title": "Test event #1",
+                "category_image": "https://spartanoracle.com/wp-content/uploads/2016/11/testing.jpg",
+                "image": "https://google.com/somethingsomething",
+                "min_reputation": 0,
+                "reward_claimable": 1,
+                "claim_topic": "0x63e32091e4445d16e29c33a6b264577c2d86694021aa4e6f4dd590048f5792e8",
+                "subject": "Testing",
+                "time_to_join": 1510244446,
+                "title": "9. November Test",
                 "event_id": 1,
+                "max_users": 5,
+                "reward_ETH": "1000000000000000000",
+                "state": 4,
+                "join_start": 1510319429,
+                "reward_EVT": 100,
+                "description": "This is a test event",
+                "end_flag": 1,
+                "start_time": 1510244506,
+                "contract_address": "0x77d85a9d992f6260734e30e4564151e609c3a2bf",
+                "category_name": "Testing",
+                "resource": "https://coleridgeprimary.net/wp-content/uploads/2016/02/Calculator.jpg",
                 "fields": [
                     {
-                        "field_id": 4,
-                        "label": "Question first part"
-                    },
-                    {
-                        "field_id": 5,
-                        "label": "Question second part"
+                        "field_id": 16,
+                        "label": "What is (4+4-12+25)*2"
                     }
                 ],
-                "start_time": 1507549357,
-                "state": 2,
-                "end_time": 1509549357,
-                "contract_address": "123abc",
-                "reward": 5,
+                "join_topic": "0x0940fd5e528ae9fa6c086f42387c791c3854e0febdf0717c2da155c9dbf1e86c",
+                "end_time": 1520241993,
+                "category_description": "This is a bullshit category",
                 "input_methods": [
                     {
+                        "field_id": 16,
                         "values": [
                             {
-                                "first_label": "first_value"
+                                "value": "21",
+                                "label": "21"
                             },
                             {
-                                "second_label": "second_value"
+                                "value": "42",
+                                "label": "42"
                             },
                             {
-                                "third_label": "third_value"
+                                "value": "43",
+                                "label": "43"
                             }
                         ],
-                        "field_id": 4,
                         "validation": [
-                            "required"
-                        ],
-                        "type": "dropdown"
-                    },
-                    {
-                        "values": [
-                            {
-                                "first_label": "first_value"
-                            },
-                            {
-                                "second_label": "second_value"
-                            },
-                            {
-                                "third_label": "third_value"
-                            }
-                        ],
-                        "field_id": 5,
-                        "validation": [
-                            "required"
+                            "required",
+                            "dropdown"
                         ],
                         "type": "dropdown"
                     }
-                ],
-                "subject": "This is a question"
+                ]
+            },
+            {
+                "category_image": "https://spartanoracle.com/wp-content/uploads/2016/11/testing.jpg",
+                "min_reputation": 0,
+                "reward_claimable": 0,
+                "claim_topic": "0x63e32091e4445d16e29c33a6b264577c2d86694021aa4e6f4dd590048f5792e8",
+                "subject": "Testing",
+                "time_to_join": 1600000001,
+                "title": "Upcoming event",
+                "event_id": 2,
+                "max_users": 1,
+                "reward_ETH": "100000",
+                "state": -1,
+                "join_start": 1600000000,
+                "reward_EVT": 2424,
+                "description": "This is a test event",
+                "end_flag": 0,
+                "start_time": 1600000002,
+                "contract_address": "0x77d85a9e992f6260734e30e4564151e609c3a2bf",
+                "category_name": "Testing",
+                "join_topic": "0x0940fd5e528ae9fa6c086f42387c791c3854e0febdf0717c2da155c9dbf1e86c",
+                "end_time": 1600000003,
+                "category_description": "This is a bullshit category"
             }
         ]
     }
@@ -545,7 +598,7 @@ curl "https://api.eventum.network/events"
 
 ### HTTP Request
 
-`GET https://api.eventum.network/events`
+`GET https://api.eventum.network/events?include=:options`
 
 
 ### Success response
@@ -562,79 +615,6 @@ code | id | message
 ---- | -- | -------
 500 | db_error | Unknown DB error
 
-
-## Join
-
-> Sample request:
-
-```shell
-curl "https://api.eventum.network/join"
-  -X "POST"
-  -d '{
-        "data": {
-          "user_id": 45,
-          "event_id": 1
-        }
-      }'
-```
-
-> Sample success response:
-
-```json
-{
-    "data": {
-        "message": "User joined the event",
-        "code": 201,
-        "id": "user_joined"
-    }
-}
-```
-
-> Sample error response:
-
-```json
-{
-    "error": {
-        "message": "Event is full",
-        "code": 400,
-        "id": "event_full_error"
-    }
-}
-```
-
-Join a user to an event to give him/her voting rights
-
-### HTTP Request
-
-`POST https://api.eventum.network/join`
-
-### Query Parameters
-
-Query parameters must be send in a JSON format inside `data` object!
-
-Parameter | Default | Format | Description
---------- | ------- | ------ | -----------
-user_id | NULL | int | user's ID
-event_id | NULL | int | event's ID
-
-### Success response
-
-User is "joined" to the event, added to the database table "event_users"
-
-code | id | message
----- | -- | -------
-201 | user_joined | User joined the event
-
-### Error response
-
-400 errors could be returned because JSON format is incorrect
-
-code | id | message
----- | -- | -------
-400 | event_full_error | Event is full
-400 | ttj_error | Time to join has passed
-400 | joined_error | User already joined
-500 | db_error | Unknown DB error
 
 ## Vote
 
@@ -657,9 +637,19 @@ curl "https://api.eventum.network/vote"
 ```json
 {
     "data": {
-        "message": "Vote cast, consensus not yet reached",
+        "message": "Vote cast, consensus reached",
         "code": 201,
-        "id": "vote_cast"
+        "id": "vote_cast",
+        "answers": [
+            {
+                "field_value": "first_value",
+                "field_id": 4
+            },
+            {
+                "field_value": "first_value",
+                "field_id": 5
+            }
+        ]
     }
 }
 ```
