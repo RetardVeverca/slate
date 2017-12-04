@@ -702,3 +702,21 @@ code | id | message
 400 | already_voted_error | User already voted on this event
 500 | event_error | Unknown event parameters error
 500 | db_error | Unknown DB error
+
+# Socket
+
+## Status
+
+Socket event to update "terminal widget" on a specific event (field event_id) with a specific text (field text)
+
+
+> Sample success response:
+
+```json
+{
+  "event": {
+    "event_id": 15,
+    "text": "User 1231fab4618c joined the event"
+  }
+}
+```
